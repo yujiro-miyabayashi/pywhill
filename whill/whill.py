@@ -24,6 +24,7 @@ class ComWHILL():
         RESERVE_1 = auto()
         RESERVE_2 = auto()
         SET_VELOCITY = auto()
+        SET_SAFE_MODE = 0x09
 
     class UserControl(IntEnum):
         DISABLE = 0
@@ -40,6 +41,7 @@ class ComWHILL():
         CommandID.SET_SPEED_PROFILE: 11,
         CommandID.SET_BATTERY_VOLTAGE_OUT: 2,
         CommandID.SET_VELOCITY: 6,
+        CommandID.SET_SAFE_MODE: 2,
     }
 
     __PROTOCOL_SIGN = 0xAF
@@ -83,6 +85,7 @@ class ComWHILL():
         self.__TIMEOUT_MAX = 60000 # 60 seconds
         self.thread = threading.Thread(target=self.hold_joy_core, kwargs={'front': 0, 'side': 0, 'timeout': 1000})
         self.__stop_event = threading.Event()
+        self.safe_mode = False
 
     def register_callback(self, event, func=None):
         ret = False
@@ -247,3 +250,13 @@ class ComWHILL():
         self.__timeout_count = 0
         self.thread = threading.Thread(target=self.hold_joy_core, kwargs={'front': front, 'side': side, 'timeout': timeout})
         self.thread.start()
+
+    def set_safe_mode(self, enable:bool):
+
+        if enable == True:
+            self.safe_mode = 0x01
+        else:
+            self.safe_mode = 0x00
+
+        command_bytes = [self.CommandID.SET_SAFE_MODE, self.safe_mode]
+        return self.send_command(command_bytes)
