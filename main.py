@@ -2,10 +2,12 @@ import time
 from whill import ComWHILL
 from pythonosc.udp_client import SimpleUDPClient
 
-COM_PORT = 'COM40'
+COM_PORT = 'COM3'
 OSC_SERVER = '127.0.0.1'
 OSC_PORT = 12345
 
+whill = ComWHILL(port=COM_PORT)
+client = SimpleUDPClient(OSC_SERVER, OSC_PORT)
 
 def callback0():
     global whill 
@@ -17,24 +19,34 @@ def callback1():
 
 def main():
 
-    whill = ComWHILL(port=COM_PORT)
-    client = SimpleUDPClient(OSC_SERVER, OSC_PORT)
+    # power on
+    whill.send_power_on()
+
+    # wait 3sec
+    _wait = 0
+    while True:
+       
+        # disable joystick
+        whill.send_joystick(front=0, side=0) 
+        whill.refresh()
+
+        time.sleep(0.1)
+        _wait+=1
+        if _wait >= 30:
+            break
+
+    # safe mode
+    whill.set_safe_mode(True)
 
     whill.register_callback('data_set_0', callback0)
     whill.register_callback('data_set_1', callback1)
     whill.start_data_stream(20, 1, 5)
 
-    # power on
-    whill.send_power_on()
-
-    # safe mode
-    whill.set_safe_mode(True)
 
     while True:
        
         # disable joystick
-        whill.send_joystick(front=0, side=0) 
-
+        # whill.send_joystick(front=0, side=0) 
         whill.refresh()
         time.sleep(0.05)
 
